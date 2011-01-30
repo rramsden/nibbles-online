@@ -6,6 +6,8 @@ task 'build', 'build domingo library', (options) ->
     puts err
   exec 'coffee -o public/ -b -c src/domingo.coffee', (err) ->
     puts err
+  exec 'coffee -o public/ -b -c src/domingo.socket.coffee', (err) ->
+    puts err
 
 task 'server', 'start zappa server', (options) ->
   exec 'zappa -w app.coffee', (err) -> 

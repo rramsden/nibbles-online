@@ -25,9 +25,7 @@ domingo.keyJustReleased = (key) ->
     for i in [0..domingo.keyMap[key].length-1]
       return true if domingo.keyState[domingo.keyMap[key][i]] == 2
 
-domingo.onKeyUp = (e) -> 
-  domingo.keyState[e.keyCode] = 2
-  console.log e.keyCode
+domingo.onKeyUp = (e) -> domingo.keyState[e.keyCode] = 2
 domingo.onKeyDown = (e) -> domingo.keyState[e.keyCode] = 1
 domingo.onMouseDown = (e) -> {}
 domingo.onMouseOver = (e) -> {}
@@ -56,4 +54,4 @@ domingo.game.create = (width, height) ->
   domingo.game.width = width
   domingo.game.height = height
   $(".container").html("<center><canvas style='border:2px solid black' width=#{width} height=#{height}></canvas></center>")
-  domingo.game.canvas = $('canvas')[0].getContext('2d')
+  domingo.canvas = $('canvas')[0].getContext('2d')

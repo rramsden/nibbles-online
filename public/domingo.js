@@ -36,8 +36,7 @@ domingo.keyJustReleased = function(key) {
   }
 };
 domingo.onKeyUp = function(e) {
-  domingo.keyState[e.keyCode] = 2;
-  return console.log(e.keyCode);
+  return domingo.keyState[e.keyCode] = 2;
 };
 domingo.onKeyDown = function(e) {
   return domingo.keyState[e.keyCode] = 1;
@@ -76,5 +75,5 @@ domingo.game.create = function(width, height) {
   domingo.game.width = width;
   domingo.game.height = height;
   $(".container").html("<center><canvas style='border:2px solid black' width=" + width + " height=" + height + "></canvas></center>");
-  return domingo.game.canvas = $('canvas')[0].getContext('2d');
+  return domingo.canvas = $('canvas')[0].getContext('2d');
 };
