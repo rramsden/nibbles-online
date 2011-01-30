@@ -1,5 +1,5 @@
 (function() {
-  var BLACK, BLUE, COLORS, EMPTY, ITEM, Nibbles, RANDOM_COLOR, RANDOM_X, RANDOM_Y, RED, SNAKE, Snake, WHITE;
+  var BLACK, BLUE, COLORS, DOWN, EMPTY, ITEM, LEFT, Nibbles, RANDOM_COLOR, RANDOM_X, RANDOM_Y, RED, RIGHT, SNAKE, Snake, UP, WHITE;
   RED = 'rgb(255, 0, 0)';
   BLUE = 'rgb(0, 255, 0)';
   WHITE = 'rgb(255,255,255)';
@@ -17,6 +17,10 @@
   EMPTY = 0;
   SNAKE = 1;
   ITEM = 2;
+  UP = 0;
+  DOWN = 1;
+  LEFT = 2;
+  RIGHT = 3;
   Nibbles = (function() {
     function Nibbles(width, height) {
       var i, j, _ref, _ref2;
@@ -31,7 +35,7 @@
         this.board[i] = [];
         for (j = 0, _ref2 = Math.floor(this.height / 10); (0 <= _ref2 ? j <= _ref2 : j >= _ref2); (0 <= _ref2 ? j += 1 : j -= 1)) {
           this.board[i][j] = EMPTY;
-          if (Math.floor(Math.random() * 100 > 10)) {
+          if (Math.floor(Math.random() * 100 > 90)) {
             this.board[i][j] = ITEM;
             this.items.push([i, j]);
           }
@@ -71,45 +75,77 @@
               this.snakes[data['id']] = player;
               controller = {
                 up: (function() {
-                  domingo.network.send({
-                    move: {
-                      direction: 0
-                    }
-                  });
-                  return player.direction = 0;
+                  if (player.direction !== UP) {
+                    domingo.network.send({
+                      move: {
+                        direction: UP,
+                        x: player.x,
+                        y: player.y,
+                        timestamp: new Date().getTime()
+                      }
+                    });
+                  }
+                  return player.direction = UP;
                 }),
                 down: (function() {
-                  domingo.network.send({
-                    move: {
-                      direction: 1
-                    }
-                  });
-                  return player.direction = 1;
+                  if (player.direction !== DOWN) {
+                    domingo.network.send({
+                      move: {
+                        direction: DOWN,
+                        x: player.x,
+                        y: player.y,
+                        timestamp: new Date().getTime()
+                      }
+                    });
+                  }
+                  return player.direction = DOWN;
                 }),
                 left: (function() {
-                  domingo.network.send({
-                    move: {
-                      direction: 2
-                    }
-                  });
-                  return player.direction = 2;
+                  if (player.direction !== LEFT) {
+                    domingo.network.send({
+                      move: {
+                        direction: LEFT,
+                        x: player.x,
+                        y: player.y,
+                        timestamp: new Date().getTime()
+                      }
+                    });
+                  }
+                  return player.direction = LEFT;
                 }),
                 right: (function() {
-                  domingo.network.send({
-                    move: {
-                      direction: 3
-                    }
-                  });
-                  return player.direction = 3;
+                  if (player.direction !== RIGHT) {
+                    domingo.network.send({
+                      move: {
+                        direction: RIGHT,
+                        x: player.x,
+                        y: player.y,
+                        timestamp: new Date().getTime()
+                      }
+                    });
+                  }
+                  return player.direction = RIGHT;
                 })
               };
-              return domingo.addController(controller);
+              domingo.addController(controller);
+              return domingo.network.send({
+                join: {
+                  x: player.x,
+                  y: player.y,
+                  direction: player.direction,
+                  timestamp: new Date().getTime()
+                }
+              });
             case 'join':
               console.log("[NIBBLES] : player " + data['id'] + " joined the game");
+              console.log(data);
               snake = new Snake(RANDOM_COLOR, this.board, data['x'], data['y']);
+              snake.direction = data['direction'];
               return this.snakes[data['id']] = snake;
             case 'move':
-              return this.snakes[id].direction = data['direction'];
+              return this.snakes[data['id']].direction = data['direction'];
+            case 'remove':
+              return this.snakes[data['id']].die();
             default:
               return console.log("[NIBBLES] : unknown opcode " + opcode);
           }
@@ -132,11 +168,6 @@
     return Nibbles;
   })();
   Snake = (function() {
-    var DOWN, LEFT, RIGHT, UP;
-    UP = 0;
-    DOWN = 1;
-    LEFT = 2;
-    RIGHT = 3;
     function Snake(color, board, x, y) {
       this.color = color;
       this.board = board;
@@ -161,13 +192,13 @@
     };
     Snake.prototype.collide = function() {
       if (this.board[this.x][this.y] === SNAKE) {
-        this.dead = true;
         this.die();
       }
       return this.dead;
     };
     Snake.prototype.die = function() {
       var x, y, _i, _len, _ref, _ref2, _results;
+      this.dead = true;
       _ref = this.body;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {

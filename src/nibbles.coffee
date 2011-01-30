@@ -3,12 +3,19 @@ BLUE = 'rgb(0, 255, 0)'
 WHITE = 'rgb(255,255,255)'
 BLACK = 'rgb(0,0,0)'
 COLORS = [RED, BLUE, BLACK]
+
 RANDOM_COLOR = (-> COLORS[Math.floor(Math.random()*COLORS.length)] )()
 RANDOM_X = (-> Math.floor(Math.random()*(600/10)))() # use a global instead
 RANDOM_Y = (-> Math.floor(Math.random()*(400/10)))()
+
 EMPTY = 0
 SNAKE = 1
 ITEM = 2
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
 
 class Nibbles
 
@@ -23,7 +30,7 @@ class Nibbles
       @board[i] = []
       for j in [0..Math.floor(@height/10)]
         @board[i][j] = EMPTY
-        if Math.floor(Math.random()*100 > 10)
+        if Math.floor(Math.random()*100 > 90)
           @board[i][j] = ITEM
           @items.push [i,j]
     
@@ -46,25 +53,42 @@ class Nibbles
       console.log "[NIBBLES] : received #{opcode}"
       
       switch opcode
-        # we will a player to the game only
+        # we will add main player to the game only
         # when we have received a response from the server
         when 'welcome'
           console.log "[NIBBLES] : server local time is #{data['time']}"
           player = new Snake(RANDOM_COLOR, @board, RANDOM_X, RANDOM_Y)
           @snakes[data['id']] = player
           controller = {
-            up:    (-> domingo.network.send(player.direction = 0),
-            down:  (-> domingo.network.send(player.direction = 1),
-            left:  (-> domingo.network.send(player.direction = 2),
-            right: (-> domingo.network.send(player.direction = 3)
+            up:    (->
+              domingo.network.send({move: {direction: UP, x: player.x, y: player.y, timestamp: new Date().getTime()}}) if player.direction != UP 
+              player.direction = UP
+            ),
+            down:  (-> 
+              domingo.network.send({move: {direction: DOWN, x: player.x, y: player.y, timestamp: new Date().getTime()}}) if player.direction != DOWN
+              player.direction = DOWN
+            ),
+            left:  (-> 
+              domingo.network.send({move: {direction: LEFT, x: player.x, y: player.y, timestamp: new Date().getTime()}}) if player.direction != LEFT
+              player.direction = LEFT
+            ),
+            right: (-> 
+              domingo.network.send({move: {direction: RIGHT, x: player.x, y: player.y, timestamp: new Date().getTime()}}) if player.direction != RIGHT
+              player.direction = RIGHT
+            )
           }
           domingo.addController(controller)
+          domingo.network.send({join: {x: player.x, y: player.y, direction: player.direction, timestamp: new Date().getTime()}})
         when 'join'
           console.log "[NIBBLES] : player #{data['id']} joined the game"
+          console.log data
           snake = new Snake(RANDOM_COLOR, @board, data['x'], data['y'])
+          snake.direction = data['direction']
           @snakes[data['id']] = snake
         when 'move'
-          @snakes[id].direction = data['direction']
+          @snakes[data['id']].direction = data['direction']
+        when 'remove'
+          @snakes[data['id']].die()
         else
           console.log "[NIBBLES] : unknown opcode #{opcode}"
    
@@ -76,10 +100,6 @@ class Nibbles
       delete @snakes[i] if snake.dead
   
 class Snake
-  UP = 0
-  DOWN = 1
-  LEFT = 2
-  RIGHT = 3
 
   constructor: (@color, @board, @x, @y) ->
     @dead = false
@@ -100,11 +120,11 @@ class Snake
 
   collide: ->
     if @board[@x][@y] == SNAKE
-      @dead = true
       this.die()
     return @dead
 
   die: ->
+    @dead = true
     for [x, y] in @body
       domingo.canvas.fillStyle = WHITE
       domingo.canvas.fillRect(x*10, y*10, 10, 10)
