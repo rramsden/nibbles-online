@@ -9,8 +9,9 @@
   
     npm install zappa
 
-  Once zappa is installed all you need to do is execute this command from the root directory
+  Once zappa is installed all you need to do is execute these commands from the root directory
 
+    cake build
     zappa -w app.coffee
 
   Once you have zappa running pass the URL out to your friends :)
